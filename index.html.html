@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Khalid Fit">
+<meta name="theme-color" content="#0a0a0a">
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' rx='40' fill='%230a0a0a'/%3E%3Ctext x='90' y='115' font-size='90' text-anchor='middle' fill='%23ff4d4d'%3E🔥%3C/text%3E%3C/svg%3E">
+<title>Khalid Fit</title>
+<link rel="manifest" href="data:application/json,%7B%22name%22%3A%22Khalid%20Fit%22%2C%22short_name%22%3A%22Khalid%20Fit%22%2C%22start_url%22%3A%22.%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%230a0a0a%22%2C%22theme_color%22%3A%22%230a0a0a%22%7D">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&display=swap');
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  html, body { background: #0a0a0a; color: #e8e8e8; font-family: 'Outfit', system-ui, sans-serif; min-height: 100vh; overscroll-behavior: none; }
+  input, button, textarea { font-family: inherit; }
+  input::placeholder { color: #555; }
+  button { cursor: pointer; }
+  ::-webkit-scrollbar { display: none; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+<script type="text/babel">
+const { useState, useEffect } = React;
+
+const C = {
+  bg: "#0a0a0a", card: "#141414", cardLight: "#1c1c1c", border: "#2a2a2a",
+  red: "#ff4d4d", green: "#00c853", blue: "#4a9eff", orange: "#ff9800", purple: "#a855f7",
+  text: "#e8e8e8", muted: "#888", dim: "#555",
+};
+
+const WORKOUTS = {
+  A: { name: "Full Body A", color: C.blue, exercises: [
+    { name: "Squat goblet ou presse", sets: 3, reps: "8-12", rest: 90 },
+    { name: "Hip thrust", sets: 3, reps: "10-12", rest: 90 },
+    { name: "Tirage vertical", sets: 3, reps: "8-12", rest: 90 },
+    { name: "Développé couché", sets: 3, reps: "8-12", rest: 90 },
+    { name: "Dips machine", sets: 2, reps: "10-12", rest: 60 },
+    { name: "Curl haltères", sets: 2, reps: "10-12", rest: 60 },
+  ]},
+  B: { name: "Full Body B", color: C.green, exercises: [
+    { name: "Fentes", sets: 3, reps: "10/jambe", rest: 90 },
+    { name: "Rowing Yates", sets: 3, reps: "10", rest: 90 },
+    { name: "Pec Deck", sets: 3, reps: "12", rest: 60 },
+    { name: "Élévations latérales", sets: 3, reps: "12", rest: 60 },
+    { name: "Extensions poulie haute", sets: 3, reps: "12", rest: 60 },
+    { name: "Mollets debout", sets: 3, reps: "15", rest: 30 },
+  ]},
+  C: { name: "Full Body C", color: C.purple, exercises: [
+    { name: "Presse", sets: 3, reps: "10-12", rest: 90 },
+    { name: "Leg curl", sets: 3, reps: "12", rest: 60 },
+    { name: "Tirage horizontal", sets: 3, reps: "10-12", rest: 90 },
+    { name: "Développé incliné", sets: 3, reps: "10", rest: 90 },
+    { name: "Développé militaire", sets: 3, reps: "10", rest: 60 },
+    { name: "Curl barre", sets: 2, reps: "10-12", rest: 60 },
+  ]},
+};
+
+const POSTURE_DAILY = [
+  { name: "Étirement psoas en fente", duration: "2x30s/côté", emoji: "🧘" },
+  { name: "Posture de l'enfant", duration: "45s", emoji: "🙏" },
+  { name: "Dead bug lent", duration: "2x10 (5/côté)", emoji: "🪲" },
+  { name: "Glute bridge avec contraction 2s", duration: "2x15", emoji: "🍑" },
+];
+
+const POSTURE_SESSION = {
+  mobility: { name: "Mobilité & étirements", duration: "5 min", color: C.blue, items: [
+    { name: "Étirement psoas en fente, bras levé", detail: "2x30s/côté" },
+    { name: "Étirement droit fémoral (quadriceps)", detail: "2x30s/côté" },
+    { name: "Posture de l'enfant", detail: "1 min" },
+    { name: "Cat-cow", detail: "10 reps lentes" },
+  ]},
+  activation: { name: "Activation profonde", duration: "5 min", color: C.orange, items: [
+    { name: "Rétroversion du bassin allongé", detail: "3x10 (tiens 3s)" },
+    { name: "Dead bug", detail: "3x8/côté" },
+    { name: "Bird dog", detail: "3x8/côté (tiens 2s)" },
+  ]},
+  strength: { name: "Renforcement", duration: "8-10 min", color: C.red, items: [
+    { name: "Hip thrust 1 jambe", detail: "3x12/côté" },
+    { name: "Planche ventrale (bassin rentré)", detail: "3x30-45s" },
+    { name: "Soulevé de terre roumain léger", detail: "3x12" },
+    { name: "Hollow body hold", detail: "3x20-30s" },
+  ]},
+};
+
+const PROGRESSION = [
+  { weeks: "S1-S2", focus: "Maîtrise rétroversion + technique", load: "Charges légères" },
+  { weeks: "S3-S4", focus: "Augmenter durée gainage + charges", load: "Planche 45-60s" },
+  { weeks: "S5-S6", focus: "Variations unilatérales", load: "Hip thrust 1J, RDL 1J" },
+  { weeks: "S7-S8", focus: "Intégration full-body, bassin neutre", load: "Réduire à 2x/sem" },
+];
+
+const NUTRITION_ITEMS = ["Petit-déj (œufs+Biaform)", "Boîte midi", "Boîte soir", "2L eau", "Pas de junk"];
+const SUPPLEMENTS_DEFAULT = [
+  { id: "creatine", name: "Créatine Creapure", detail: "5g — n'importe quand", emoji: "💪" },
+  { id: "whey_native", name: "Native Whey Isolate", detail: "30g — collation 10h", emoji: "🥤" },
+  { id: "omega3", name: "Oméga 3 Epax", detail: "4 caps — avec un repas", emoji: "🐟" },
+  { id: "magnesium", name: "Bisglycinate Magnésium", detail: "3-4 gélules — le soir", emoji: "🌙" },
+  { id: "vitd_k2", name: "Vitamine D3 + K2 MK7", detail: "1 cap — repas gras (après D-Cure)", emoji: "☀️" },
+  { id: "dcure", name: "D-Cure", detail: "Dose de charge — selon prescription", emoji: "💉" },
+  { id: "folavit", name: "Folavit (B9)", detail: "Selon prescription médecin", emoji: "🌿" },
+  { id: "whey_clear", name: "Clear Whey Isolate", detail: "Post-training si stock restant", emoji: "💧" },
+  { id: "carnitine", name: "L-Carnitine L-Tartrate", detail: "2 gélules/jour — si activée", emoji: "🔥" },
+];
+
+// Storage helpers
+const load = (k, def) => { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : def; } catch { return def; } };
+const save = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} };
+
+const todayKey = () => new Date().toISOString().slice(0, 10);
+const startOfWeek = () => { const n = new Date(); const m = new Date(n); m.setDate(n.getDate() - ((n.getDay() + 6) % 7)); m.setHours(0,0,0,0); return m; };
+
+function App() {
+  const [tab, setTab] = useState("dashboard");
+  const [weights, setWeights] = useState(() => load("weights", []));
+  const [history, setHistory] = useState(() => load("history", []));
+  const [nutrition, setNutrition] = useState(() => load("nutrition", {}));
+  const [supplements, setSupplements] = useState(() => load("supplements", {}));
+  const [enabledSupps, setEnabledSupps] = useState(() => load("enabledSupps", ["creatine", "whey_native", "omega3", "magnesium", "dcure", "folavit"]));
+  const [postureLog, setPostureLog] = useState(() => load("postureLog", {}));
+  const [currentWeek, setCurrentWeek] = useState(() => load("currentWeek", 1));
+
+  useEffect(() => save("weights", weights), [weights]);
+  useEffect(() => save("history", history), [history]);
+  useEffect(() => save("nutrition", nutrition), [nutrition]);
+  useEffect(() => save("supplements", supplements), [supplements]);
+  useEffect(() => save("enabledSupps", enabledSupps), [enabledSupps]);
+  useEffect(() => save("postureLog", postureLog), [postureLog]);
+  useEffect(() => save("currentWeek", currentWeek), [currentWeek]);
+
+  return (
+    <div style={{ minHeight: "100vh", paddingBottom: 100, paddingTop: "env(safe-area-inset-top)" }}>
+      <div style={{ padding: "20px 16px 12px", textAlign: "center", borderBottom: `1px solid ${C.border}` }}>
+        <div style={{ fontSize: 11, letterSpacing: 3, color: C.muted, fontWeight: 600 }}>KHALID • SÈCHE 2026</div>
+        <div style={{ fontSize: 18, fontWeight: 800, marginTop: 4, background: `linear-gradient(90deg, ${C.red}, ${C.orange})`, WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>OBJECTIF 80 KG</div>
+      </div>
+
+      <div style={{ padding: 16 }}>
+        {tab === "dashboard" && <Dashboard weights={weights} setWeights={setWeights} history={history} setTab={setTab} />}
+        {tab === "workout" && <WorkoutTab history={history} setHistory={setHistory} />}
+        {tab === "posture" && <PostureTab postureLog={postureLog} setPostureLog={setPostureLog} currentWeek={currentWeek} setCurrentWeek={setCurrentWeek} />}
+        {tab === "nutrition" && <NutritionTab nutrition={nutrition} setNutrition={setNutrition} supplements={supplements} setSupplements={setSupplements} enabledSupps={enabledSupps} setEnabledSupps={setEnabledSupps} />}
+        {tab === "history" && <HistoryTab history={history} setHistory={setHistory} weights={weights} setWeights={setWeights} postureLog={postureLog} />}
+      </div>
+
+      <div style={{ position: "fixed", bottom: 0, left: 0, right: 0, background: "#080808", borderTop: `1px solid ${C.border}`, display: "flex", padding: "8px 0 calc(14px + env(safe-area-inset-bottom))", zIndex: 100 }}>
+        {[
+          { id: "dashboard", icon: "📊", label: "Home" },
+          { id: "workout", icon: "🏋️", label: "Séance" },
+          { id: "posture", icon: "🧘", label: "Posture" },
+          { id: "nutrition", icon: "🍽️", label: "Nutri" },
+          { id: "history", icon: "📋", label: "Histo" },
+        ].map(t => (
+          <button key={t.id} onClick={() => setTab(t.id)} style={{ flex: 1, background: "none", border: "none", padding: "6px 0", display: "flex", flexDirection: "column", alignItems: "center", gap: 2, color: tab === t.id ? C.red : C.muted }}>
+            <span style={{ fontSize: 18 }}>{t.icon}</span>
+            <span style={{ fontSize: 10, fontWeight: tab === t.id ? 700 : 500 }}>{t.label}</span>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function Dashboard({ weights, setWeights, history, setTab }) {
+  const [show, setShow] = useState(false);
+  const [w, setW] = useState("");
+  const [bf, setBf] = useState("");
+  const last = weights[weights.length - 1];
+  const start = weights[0]?.weight || 95;
+  const goal = 80;
+  const progress = last ? ((start - last.weight) / Math.max(0.01, start - goal)) * 100 : 0;
+  const sw = startOfWeek();
+  const thisWeek = history.filter(h => new Date(h.date) >= sw).length;
+
+  const sortedW = [...weights].slice(-12);
+  const minW = sortedW.length ? Math.min(...sortedW.map(x => x.weight)) - 1 : 80;
+  const maxW = sortedW.length ? Math.max(...sortedW.map(x => x.weight)) + 1 : 95;
+
+  function add() {
+    if (!w) return;
+    setWeights([...weights, { date: new Date().toISOString(), weight: parseFloat(w), bf: bf ? parseFloat(bf) : null }]);
+    setW(""); setBf(""); setShow(false);
+  }
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+      <div style={{ background: `linear-gradient(135deg, ${C.card}, ${C.cardLight})`, borderRadius: 18, padding: 20, border: `1px solid ${C.border}` }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+          <span style={{ fontSize: 11, color: C.muted, letterSpacing: 2, fontWeight: 600 }}>POIDS ACTUEL</span>
+          <button onClick={() => setShow(!show)} style={{ background: show ? C.dim : C.red, border: "none", borderRadius: 8, color: "#fff", padding: "6px 10px", fontSize: 11, fontWeight: 700 }}>
+            {show ? "ANNULER" : "+ PESÉE"}
+          </button>
+        </div>
+        <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
+          <span style={{ fontSize: 48, fontWeight: 900, color: C.red }}>{last?.weight || "—"}</span>
+          <span style={{ fontSize: 18, color: C.muted }}>kg</span>
+          {last?.bf && <span style={{ fontSize: 14, color: C.orange, marginLeft: 8 }}>{last.bf}% MG</span>}
+        </div>
+        {show && (
+          <div style={{ marginTop: 12, display: "flex", gap: 8 }}>
+            <input type="number" step="0.1" placeholder="Poids" value={w} onChange={e => setW(e.target.value)} style={inp} />
+            <input type="number" step="0.1" placeholder="% MG" value={bf} onChange={e => setBf(e.target.value)} style={inp} />
+            <button onClick={add} style={{ background: C.green, border: "none", borderRadius: 8, color: "#fff", padding: "0 14px", fontWeight: 700 }}>OK</button>
+          </div>
+        )}
+        <div style={{ marginTop: 14 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", fontSize: 10, color: C.muted, marginBottom: 4 }}>
+            <span>{start} kg</span><span>{progress.toFixed(0)}% du chemin</span><span>{goal} kg</span>
+          </div>
+          <div style={{ height: 6, background: C.border, borderRadius: 3, overflow: "hidden" }}>
+            <div style={{ width: `${Math.max(0, Math.min(100, progress))}%`, height: "100%", background: `linear-gradient(90deg, ${C.red}, ${C.orange})` }} />
+          </div>
+        </div>
+      </div>
+
+      {sortedW.length >= 2 && (
+        <div style={{ background: C.card, borderRadius: 12, padding: 14, border: `1px solid ${C.border}` }}>
+          <div style={{ fontSize: 11, color: C.muted, letterSpacing: 1.5, fontWeight: 600, marginBottom: 10 }}>📈 ÉVOLUTION ({sortedW.length} pesées)</div>
+          <svg viewBox={`0 0 300 100`} style={{ width: "100%", height: 100 }}>
+            <polyline fill="none" stroke={C.red} strokeWidth="2"
+              points={sortedW.map((p, i) => {
+                const x = (i / (sortedW.length - 1)) * 290 + 5;
+                const y = 95 - ((p.weight - minW) / Math.max(0.01, maxW - minW)) * 85;
+                return `${x},${y}`;
+              }).join(" ")} />
+            {sortedW.map((p, i) => {
+              const x = (i / (sortedW.length - 1)) * 290 + 5;
+              const y = 95 - ((p.weight - minW) / Math.max(0.01, maxW - minW)) * 85;
+              return <circle key={i} cx={x} cy={y} r="3" fill={C.red} />;
+            })}
+          </svg>
+        </div>
+      )}
+
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+        <Stat label="SÉANCES" value={thisWeek} sub="cette semaine" color={C.green} />
+        <Stat label="OBJECTIF" value="2-3" sub="par semaine" color={C.blue} />
+      </div>
+
+      <div style={{ fontSize: 11, color: C.muted, letterSpacing: 2, fontWeight: 600, marginTop: 8 }}>LANCER UNE SÉANCE</div>
+      {Object.entries(WORKOUTS).map(([k, w]) => (
+        <button key={k} onClick={() => setTab("workout")} style={{ ...rowBtn, borderLeft: `4px solid ${w.color}` }}>
+          <div>
+            <div style={{ fontWeight: 700, fontSize: 15 }}>{w.name}</div>
+            <div style={{ fontSize: 11, color: C.muted, marginTop: 2 }}>{w.exercises.length} exos • ~50 min</div>
+          </div>
+          <span style={{ fontSize: 22, color: w.color }}>▶</span>
+        </button>
+      ))}
+      <button onClick={() => setTab("posture")} style={{ ...rowBtn, borderLeft: `4px solid ${C.orange}` }}>
+        <div>
+          <div style={{ fontWeight: 700, fontSize: 15 }}>🧘 Routine Posture</div>
+          <div style={{ fontSize: 11, color: C.muted, marginTop: 2 }}>Hyperlordose • 5 ou 20 min</div>
+        </div>
+        <span style={{ fontSize: 22, color: C.orange }}>▶</span>
+      </button>
+    </div>
+  );
+}
+
+function Stat({ label, value, sub, color }) {
+  return (
+    <div style={{ background: C.card, borderRadius: 12, padding: 14, border: `1px solid ${C.border}` }}>
+      <div style={{ fontSize: 10, letterSpacing: 1.5, fontWeight: 700, color, marginBottom: 6 }}>{label}</div>
+      <div style={{ fontSize: 26, fontWeight: 900 }}>{value}</div>
+      <div style={{ fontSize: 10, color: C.muted }}>{sub}</div>
+    </div>
+  );
+}
+
+const inp = { flex: 1, background: C.bg, border: `1px solid ${C.border}`, borderRadius: 8, color: C.text, padding: "10px 12px", fontSize: 14, outline: "none" };
+const rowBtn = { background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: "14px 16px", textAlign: "left", color: C.text, display: "flex", justifyContent: "space-between", alignItems: "center" };
+
+function WorkoutTab({ history, setHistory }) {
+  const [sel, setSel] = useState(null);
+  const [data, setData] = useState({});
+  const [walkMin, setWalkMin] = useState("");
+  const [planks, setPlanks] = useState("");
+  const [note, setNote] = useState("");
+  const [timer, setTimer] = useState(0);
+  const [warmup, setWarmup] = useState(false);
+
+  useEffect(() => {
+    if (timer <= 0) return;
+    const t = setTimeout(() => setTimer(timer - 1), 1000);
+    return () => clearTimeout(t);
+  }, [timer]);
+
+  if (!sel) {
+    return (
+      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+        <div style={{ fontSize: 11, color: C.muted, letterSpacing: 2, fontWeight: 600 }}>CHOISIS TA SÉANCE</div>
+        {Object.entries(WORKOUTS).map(([k, w]) => (
+          <button key={k} onClick={() => { setSel(k); setData({}); setWarmup(false); }} style={{ ...rowBtn, borderLeft: `4px solid ${w.color}`, flexDirection: "column", alignItems: "flex-start" }}>
+            <div style={{ fontWeight: 800, fontSize: 16 }}>{w.name}</div>
+            <div style={{ fontSize: 12, color: C.muted, marginTop: 4 }}>{w.exercises.map(e => e.name.split(" ")[0]).join(" • ")}</div>
+          </button>
+        ))}
+      </div>
+    );
+  }
+
+  const wk = WORKOUTS[sel];
+  const hasData = Object.keys(data).length > 0 || walkMin || planks || warmup;
+
+  function saveSession() {
+    if (!hasData) { alert("Aucune donnée à enregistrer"); return; }
+    setHistory([...history, { date: new Date().toISOString(), type: wk.name, data, walkMin: walkMin || null, planks: planks || null, note, warmupDone: warmup }]);
+    setSel(null); setData({}); setWalkMin(""); setPlanks(""); setNote(""); setWarmup(false);
+  }
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <button onClick={() => { if (hasData && !confirm("Quitter sans enregistrer ?")) return; setSel(null); }} style={{ background: "none", border: "none", color: C.muted, fontSize: 13 }}>← Retour</button>
+        <div style={{ fontSize: 14, fontWeight: 800, color: wk.color }}>{wk.name}</div>
+      </div>
+
+      {timer > 0 && (
+        <div style={{ position: "fixed", top: 70, left: 16, right: 16, background: C.red, borderRadius: 12, padding: 14, textAlign: "center", zIndex: 50, boxShadow: "0 6px 24px rgba(255,77,77,0.5)" }}>
+          <div style={{ fontSize: 10, color: "#fff", letterSpacing: 2, fontWeight: 700 }}>REPOS</div>
+          <div style={{ fontSize: 32, fontWeight: 900, color: "#fff" }}>{Math.floor(timer / 60)}:{String(timer % 60).padStart(2, "0")}</div>
+          <button onClick={() => setTimer(0)} style={{ background: "rgba(255,255,255,0.2)", border: "none", borderRadius: 6, color: "#fff", padding: "4px 12px", fontSize: 11, fontWeight: 700, marginTop: 4 }}>STOP</button>
+        </div>
+      )}
+
+      <div style={{ background: `${C.orange}15`, border: `1px solid ${C.orange}40`, borderRadius: 12, padding: 14 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div>
+            <div style={{ fontSize: 12, fontWeight: 700, color: C.orange, letterSpacing: 1 }}>🧘 ÉCHAUFFEMENT POSTURE (5 min)</div>
+            <div style={{ fontSize: 11, color: C.muted, marginTop: 4 }}>Mobilité + activation avant la séance</div>
+          </div>
+          <button onClick={() => setWarmup(!warmup)} style={{ background: warmup ? C.green : "transparent", border: `2px solid ${warmup ? C.green : C.orange}`, borderRadius: 8, color: "#fff", padding: "8px 12px", fontSize: 11, fontWeight: 700 }}>
+            {warmup ? "✓ FAIT" : "À faire"}
+          </button>
+        </div>
+        {!warmup && <div style={{ marginTop: 10, fontSize: 11, color: C.text, lineHeight: 1.6, opacity: 0.85 }}>Psoas 30s/côté • Cat-cow 10x • Dead bug 2x8 • Bird dog 2x8 • Glute bridge 2x10</div>}
+      </div>
+
+      <div style={{ background: C.card, borderRadius: 12, padding: 14, border: `1px solid ${C.border}` }}>
+        <div style={{ fontSize: 12, fontWeight: 700, color: C.blue, letterSpacing: 1 }}>🚣 RAMEUR — 10 MIN</div>
+      </div>
+
+      {wk.exercises.map((ex, exIdx) => (
+        <div key={exIdx} style={{ background: C.card, borderRadius: 12, padding: 14, border: `1px solid ${C.border}` }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+            <div>
+              <div style={{ fontSize: 14, fontWeight: 700 }}>{ex.name}</div>
+              <div style={{ fontSize: 11, color: C.muted }}>{ex.sets} séries × {ex.reps} reps</div>
+            </div>
+            <button onClick={() => setTimer(ex.rest)} style={{ background: C.bg, border: `1px solid ${C.border}`, borderRadius: 6, color: C.muted, padding: "4px 8px", fontSize: 11 }}>⏱ {ex.rest}s</button>
+          </div>
+          <div style={{ display: "flex", gap: 6 }}>
+            {Array.from({ length: ex.sets }).map((_, si) => (
+              <div key={si} style={{ flex: 1 }}>
+                <div style={{ fontSize: 9, color: C.dim, textAlign: "center", marginBottom: 3 }}>S{si + 1}{si === ex.sets - 1 && <span style={{ color: C.orange }}> ⚡</span>}</div>
+                <input placeholder="kg" value={data[`${exIdx}-${si}`] || ""} onChange={e => setData({ ...data, [`${exIdx}-${si}`]: e.target.value })} style={{ width: "100%", background: C.bg, border: `1px solid ${C.border}`, borderRadius: 6, color: C.text, padding: "8px 0", fontSize: 14, fontWeight: 700, textAlign: "center", outline: "none" }} />
+              </div>
+            ))}
+          </div>
+        </div>
+      ))}
+
+      <div style={{ background: `${C.red}10`, borderRadius: 12, padding: 14, border: `1px solid ${C.red}30` }}>
+        <div style={{ fontSize: 12, fontWeight: 700, color: C.red, letterSpacing: 1, marginBottom: 8 }}>🔥 FINISHER POSTURE</div>
+        <div style={{ fontSize: 11, color: C.muted, marginBottom: 10 }}>2 séries planche pour renforcer le bas du dos</div>
+        <input placeholder="Planche (sec)" value={planks} onChange={e => setPlanks(e.target.value)} style={{ ...inp, width: "100%" }} />
+      </div>
+
+      <div style={{ background: C.card, borderRadius: 12, padding: 14, border: `1px solid ${C.border}` }}>
+        <div style={{ fontSize: 12, fontWeight: 700, color: C.green, letterSpacing: 1, marginBottom: 8 }}>🚶 MARCHE INCLINÉE</div>
+        <input placeholder="Minutes (20 min minimum)" value={walkMin} onChange={e => setWalkMin(e.target.value)} style={{ ...inp, width: "100%" }} />
+      </div>
+
+      <textarea placeholder="Note de séance (ressenti, énergie...)" value={note} onChange={e => setNote(e.target.value)} rows={3} style={{ ...inp, width: "100%", resize: "none" }} />
+      <button onClick={saveSession} style={{ background: C.red, border: "none", borderRadius: 12, color: "#fff", padding: 16, fontSize: 14, fontWeight: 800, letterSpacing: 1 }}>ENREGISTRER LA SÉANCE</button>
+    </div>
+  );
+}
+
+function PostureTab({ postureLog, setPostureLog, currentWeek, setCurrentWeek }) {
+  const [view, setView] = useState("daily");
+  const tk = todayKey();
+  const dailyDone = postureLog[tk]?.daily || false;
+  const sw = startOfWeek();
+  const sessionsWeek = Object.entries(postureLog).filter(([k, v]) => new Date(k) >= sw && v.session).length;
+
+  function toggleDaily() { setPostureLog({ ...postureLog, [tk]: { ...postureLog[tk], daily: !dailyDone } }); }
+  function logSession() { setPostureLog({ ...postureLog, [tk]: { ...postureLog[tk], session: true } }); }
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+      <div style={{ background: `linear-gradient(135deg, ${C.orange}20, ${C.red}10)`, borderRadius: 18, padding: 18, border: `1px solid ${C.orange}30` }}>
+        <div style={{ fontSize: 11, color: C.orange, letterSpacing: 2, fontWeight: 700 }}>PROGRAMME POSTURE</div>
+        <div style={{ fontSize: 22, fontWeight: 900, marginTop: 4 }}>Hyperlordose lombaire</div>
+        <div style={{ fontSize: 12, color: C.muted, marginTop: 4 }}>Plan 8 semaines • Semaine {currentWeek}/8</div>
+        <div style={{ display: "flex", gap: 4, marginTop: 12 }}>
+          {Array.from({ length: 8 }).map((_, i) => (
+            <div key={i} style={{ flex: 1, height: 4, borderRadius: 2, background: i < currentWeek ? C.orange : C.border }} />
+          ))}
+        </div>
+        <div style={{ display: "flex", justifyContent: "space-between", marginTop: 10 }}>
+          <button onClick={() => setCurrentWeek(Math.max(1, currentWeek - 1))} style={navBtn} disabled={currentWeek <= 1}>‹ Sem précédente</button>
+          <button onClick={() => setCurrentWeek(Math.min(8, currentWeek + 1))} style={navBtn} disabled={currentWeek >= 8}>Sem suivante ›</button>
+        </div>
+      </div>
+
+      <div style={{ display: "flex", gap: 6, background: C.card, padding: 4, borderRadius: 10, border: `1px solid ${C.border}` }}>
+        {[{id:"daily",l:"Quotidien"},{id:"session",l:"Séance"},{id:"progression",l:"Plan 8sem"}].map(t => (
+          <button key={t.id} onClick={() => setView(t.id)} style={{ flex: 1, background: view === t.id ? C.orange : "transparent", border: "none", borderRadius: 8, color: view === t.id ? "#000" : C.muted, padding: "10px 0", fontSize: 12, fontWeight: 700 }}>{t.l}</button>
+        ))}
+      </div>
+
+      {view === "daily" && (
+        <>
+          <div style={{ background: C.card, borderRadius: 12, padding: 16, border: `1px solid ${C.border}` }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+              <div>
+                <div style={{ fontSize: 14, fontWeight: 800 }}>Routine quotidienne</div>
+                <div style={{ fontSize: 11, color: C.muted }}>5 min • Tous les jours</div>
+              </div>
+              <button onClick={toggleDaily} style={{ background: dailyDone ? C.green : "transparent", border: `2px solid ${dailyDone ? C.green : C.orange}`, borderRadius: 10, color: "#fff", padding: "10px 14px", fontSize: 11, fontWeight: 800 }}>
+                {dailyDone ? "✓ FAIT" : "Marquer fait"}
+              </button>
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              {POSTURE_DAILY.map((it, i) => (
+                <div key={i} style={{ background: C.bg, borderRadius: 8, padding: "10px 12px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}><span style={{ fontSize: 18 }}>{it.emoji}</span><span style={{ fontSize: 13 }}>{it.name}</span></div>
+                  <span style={{ fontSize: 11, color: C.orange, fontWeight: 600 }}>{it.duration}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div style={{ background: `${C.blue}10`, borderRadius: 10, padding: 12, border: `1px solid ${C.blue}30`, fontSize: 12, lineHeight: 1.5 }}>
+            💡 <b>Astuce :</b> Le matin au réveil ou le soir avant de dormir.
+          </div>
+        </>
+      )}
+
+      {view === "session" && (
+        <>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "0 4px" }}>
+            <div style={{ fontSize: 12, color: C.muted }}>{sessionsWeek}/3 cette semaine</div>
+            <button onClick={logSession} style={{ background: C.orange, border: "none", borderRadius: 8, color: "#000", padding: "8px 14px", fontSize: 12, fontWeight: 800 }}>✓ Séance faite</button>
+          </div>
+          {Object.entries(POSTURE_SESSION).map(([k, b]) => <Block key={k} block={b} />)}
+          <div style={{ background: `${C.green}10`, borderRadius: 10, padding: 12, border: `1px solid ${C.green}30`, fontSize: 12, lineHeight: 1.5 }}>
+            ✅ <b>Quand :</b> Avant ta séance Full Body ou les jours off. 3x par semaine.
+          </div>
+        </>
+      )}
+
+      {view === "progression" && (
+        <>
+          {PROGRESSION.map((p, i) => {
+            const ws = i * 2 + 1;
+            const active = currentWeek >= ws && currentWeek <= ws + 1;
+            const done = currentWeek > ws + 1;
+            return (
+              <div key={i} style={{ background: C.card, borderRadius: 12, padding: 14, border: `1px solid ${active ? C.orange : C.border}` }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <div style={{ width: 32, height: 32, borderRadius: "50%", background: done ? C.green : active ? C.orange : C.border, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 800, color: active || done ? "#000" : C.muted }}>{done ? "✓" : i + 1}</div>
+                    <div>
+                      <div style={{ fontSize: 13, fontWeight: 800 }}>{p.weeks}</div>
+                      <div style={{ fontSize: 11, color: C.muted }}>{p.load}</div>
+                    </div>
+                  </div>
+                  {active && <div style={{ background: C.orange, color: "#000", fontSize: 10, fontWeight: 800, padding: "3px 8px", borderRadius: 4 }}>EN COURS</div>}
+                </div>
+                <div style={{ fontSize: 12, marginTop: 6, paddingLeft: 40 }}>{p.focus}</div>
+              </div>
+            );
+          })}
+          <div style={{ background: `${C.orange}10`, borderRadius: 10, padding: 12, border: `1px solid ${C.orange}30`, fontSize: 12, lineHeight: 1.5 }}>
+            🎯 <b>Signaux de progression :</b> moins de tension lombaire, ventre qui ressort moins, meilleur contrôle du bassin.
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+const navBtn = { background: "transparent", border: `1px solid ${C.border}`, borderRadius: 6, color: C.muted, padding: "6px 12px", fontSize: 11, fontWeight: 600 };
+
+function Block({ block }) {
+  const [open, setOpen] = useState(true);
+  return (
+    <div style={{ background: C.card, borderRadius: 12, border: `1px solid ${C.border}`, overflow: "hidden", borderLeft: `4px solid ${block.color}` }}>
+      <button onClick={() => setOpen(!open)} style={{ width: "100%", background: "none", border: "none", padding: 14, display: "flex", justifyContent: "space-between", alignItems: "center", color: C.text }}>
+        <div style={{ textAlign: "left" }}>
+          <div style={{ fontSize: 13, fontWeight: 800 }}>{block.name}</div>
+          <div style={{ fontSize: 11, color: C.muted }}>{block.duration}</div>
+        </div>
+        <span style={{ fontSize: 14, color: C.muted }}>{open ? "▲" : "▼"}</span>
+      </button>
+      {open && (
+        <div style={{ padding: "0 14px 14px", display: "flex", flexDirection: "column", gap: 6 }}>
+          {block.items.map((it, i) => (
+            <div key={i} style={{ background: C.bg, borderRadius: 6, padding: "10px 12px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <span style={{ fontSize: 12 }}>{it.name}</span>
+              <span style={{ fontSize: 11, color: block.color, fontWeight: 600 }}>{it.detail}</span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function NutritionTab({ nutrition, setNutrition, supplements, setSupplements, enabledSupps, setEnabledSupps }) {
+  const [showConfig, setShowConfig] = useState(false);
+  const tk = todayKey();
+  const today = nutrition[tk] || {};
+  const todaySupp = supplements[tk] || {};
+  const activeSupps = SUPPLEMENTS_DEFAULT.filter(s => enabledSupps.includes(s.id));
+
+  function toggle(it) { setNutrition({ ...nutrition, [tk]: { ...today, [it]: !today[it] } }); }
+  function toggleSupp(id) { setSupplements({ ...supplements, [tk]: { ...todaySupp, [id]: !todaySupp[id] } }); }
+  function toggleEnabled(id) { setEnabledSupps(enabledSupps.includes(id) ? enabledSupps.filter(x => x !== id) : [...enabledSupps, id]); }
+
+  const nDone = NUTRITION_ITEMS.filter(c => today[c]).length;
+  const sDone = activeSupps.filter(s => todaySupp[s.id]).length;
+  const total = NUTRITION_ITEMS.length + activeSupps.length;
+  const totalDone = nDone + sDone;
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+      <div style={{ background: `linear-gradient(135deg, ${C.green}20, ${C.blue}10)`, borderRadius: 16, padding: 18, border: `1px solid ${C.green}30` }}>
+        <div style={{ fontSize: 11, color: C.green, letterSpacing: 2, fontWeight: 700 }}>AUJOURD'HUI</div>
+        <div style={{ fontSize: 32, fontWeight: 900, marginTop: 4 }}>{totalDone}/{total} ✓</div>
+        <div style={{ fontSize: 11, color: C.muted, marginTop: 4 }}>1800-1900 kcal • 150g protéines</div>
+      </div>
+
+      <div style={{ fontSize: 11, color: C.muted, letterSpacing: 2, fontWeight: 600, marginTop: 4 }}>NUTRITION ({nDone}/{NUTRITION_ITEMS.length})</div>
+      {NUTRITION_ITEMS.map(c => (
+        <button key={c} onClick={() => toggle(c)} style={checkBtn(today[c])}>
+          <div style={check(today[c])}>{today[c] && "✓"}</div>
+          <span style={{ fontSize: 14, fontWeight: today[c] ? 700 : 500 }}>{c}</span>
+        </button>
+      ))}
+
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 8 }}>
+        <div style={{ fontSize: 11, color: C.muted, letterSpacing: 2, fontWeight: 600 }}>SUPPLÉMENTS ({sDone}/{activeSupps.length})</div>
+        <button onClick={() => setShowConfig(!showConfig)} style={{ background: "transparent", border: `1px solid ${C.border}`, borderRadius: 6, color: C.muted, padding: "4px 10px", fontSize: 11 }}>
+          {showConfig ? "✓ Fermer" : "⚙ Config"}
+        </button>
+      </div>
+
+      {showConfig && (
+        <div style={{ background: C.card, borderRadius: 10, padding: 12, border: `1px solid ${C.border}` }}>
+          <div style={{ fontSize: 11, color: C.muted, marginBottom: 8 }}>Coche les suppléments que tu prends :</div>
+          {SUPPLEMENTS_DEFAULT.map(s => (
+            <div key={s.id} onClick={() => toggleEnabled(s.id)} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 0", cursor: "pointer" }}>
+              <div style={check(enabledSupps.includes(s.id))}>{enabledSupps.includes(s.id) && "✓"}</div>
+              <span style={{ fontSize: 13 }}>{s.emoji} {s.name}</span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {activeSupps.length === 0 ? (
+        <div style={{ background: C.card, borderRadius: 10, padding: 20, textAlign: "center", color: C.muted, fontSize: 12, border: `1px dashed ${C.border}` }}>
+          Aucun supplément activé. Clique sur ⚙ Config pour les choisir.
+        </div>
+      ) : activeSupps.map(s => (
+        <button key={s.id} onClick={() => toggleSupp(s.id)} style={checkBtn(todaySupp[s.id])}>
+          <div style={check(todaySupp[s.id])}>{todaySupp[s.id] && "✓"}</div>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 14, fontWeight: todaySupp[s.id] ? 700 : 500 }}>{s.emoji} {s.name}</div>
+            {s.detail && <div style={{ fontSize: 11, color: C.muted, marginTop: 2 }}>{s.detail}</div>}
+          </div>
+        </button>
+      ))}
+
+      <div style={{ background: C.card, borderRadius: 12, padding: 14, border: `1px solid ${C.border}`, fontSize: 12, color: C.muted, lineHeight: 1.6, marginTop: 8 }}>
+        <div style={{ color: C.red, fontWeight: 700, fontSize: 11, letterSpacing: 1, marginBottom: 6 }}>RÈGLES NON NÉGOCIABLES</div>
+        • Pas 2 jours de mauvaise diète d'affilée<br />
+        • Si gros écart au midi → repas léger le soir<br />
+        • Tu manges pas mal = pas d'excuse pour pas t'entraîner
+      </div>
+    </div>
+  );
+}
+
+const checkBtn = (done) => ({
+  background: done ? `${C.green}20` : C.card, border: `1px solid ${done ? C.green : C.border}`,
+  borderRadius: 10, padding: "14px 16px", display: "flex", alignItems: "center", gap: 12,
+  color: C.text, textAlign: "left", width: "100%",
+});
+const check = (done) => ({
+  width: 22, height: 22, borderRadius: "50%", background: done ? C.green : "transparent",
+  border: `2px solid ${done ? C.green : C.border}`, display: "flex", alignItems: "center",
+  justifyContent: "center", flexShrink: 0, color: "#fff", fontSize: 12, fontWeight: 800,
+});
+
+function HistoryTab({ history, setHistory, weights, setWeights, postureLog }) {
+  const [tab, setTab] = useState("workout");
+  const sortedH = [...history].sort((a, b) => new Date(b.date) - new Date(a.date));
+  const sortedW = [...weights].sort((a, b) => new Date(b.date) - new Date(a.date));
+  const postE = Object.entries(postureLog).sort((a, b) => new Date(b[0]) - new Date(a[0]));
+
+  function delHistory(idx) { if (confirm("Supprimer cette séance ?")) setHistory(history.filter((_, i) => i !== sortedH.length - 1 - idx)); }
+  function delWeight(idx) { if (confirm("Supprimer cette pesée ?")) setWeights(weights.filter((_, i) => i !== sortedW.length - 1 - idx)); }
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+      <div style={{ display: "flex", gap: 6, background: C.card, padding: 4, borderRadius: 10, border: `1px solid ${C.border}` }}>
+        {[{id:"workout",l:"Séances"},{id:"weight",l:"Pesées"},{id:"posture",l:"Posture"}].map(t => (
+          <button key={t.id} onClick={() => setTab(t.id)} style={{ flex: 1, background: tab === t.id ? C.red : "transparent", border: "none", borderRadius: 8, color: tab === t.id ? "#fff" : C.muted, padding: "10px 0", fontSize: 12, fontWeight: 700 }}>{t.l}</button>
+        ))}
+      </div>
+
+      {tab === "workout" && (sortedH.length === 0 ? <Empty msg="Aucune séance enregistrée" /> : sortedH.map((s, i) => (
+        <div key={i} style={{ background: C.card, borderRadius: 10, padding: 12, border: `1px solid ${C.border}` }}>
+          <div style={{ display: "flex", justifyContent: "space-between" }}>
+            <span style={{ fontSize: 13, fontWeight: 700, color: C.red }}>{s.type}</span>
+            <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+              <span style={{ fontSize: 11, color: C.muted }}>{new Date(s.date).toLocaleDateString("fr-FR")}</span>
+              <button onClick={() => delHistory(i)} style={{ background: "none", border: "none", color: C.dim, fontSize: 14 }}>🗑</button>
+            </div>
+          </div>
+          {s.warmupDone && <div style={{ fontSize: 10, color: C.orange, marginTop: 4 }}>✓ Échauffement posture fait</div>}
+          {s.note && <div style={{ fontSize: 11, marginTop: 6, fontStyle: "italic", opacity: 0.8 }}>"{s.note}"</div>}
+          <div style={{ fontSize: 10, color: C.muted, marginTop: 6 }}>
+            {s.walkMin && `🚶 ${s.walkMin}min`} {s.planks && `• 🪵 Planche ${s.planks}s`}
+          </div>
+        </div>
+      )))}
+
+      {tab === "weight" && (sortedW.length === 0 ? <Empty msg="Aucune pesée enregistrée" /> : sortedW.map((w, i) => (
+        <div key={i} style={{ background: C.card, borderRadius: 10, padding: 12, border: `1px solid ${C.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <span style={{ fontSize: 11, color: C.muted }}>{new Date(w.date).toLocaleDateString("fr-FR")}</span>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <span style={{ fontSize: 14, fontWeight: 700, color: C.red }}>{w.weight} kg</span>
+            {w.bf && <span style={{ fontSize: 12, color: C.orange }}>{w.bf}%</span>}
+            <button onClick={() => delWeight(i)} style={{ background: "none", border: "none", color: C.dim, fontSize: 14 }}>🗑</button>
+          </div>
+        </div>
+      )))}
+
+      {tab === "posture" && (postE.length === 0 ? <Empty msg="Aucune routine posture enregistrée" /> : postE.map(([d, l], i) => (
+        <div key={i} style={{ background: C.card, borderRadius: 10, padding: 12, border: `1px solid ${C.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <span style={{ fontSize: 12, color: C.muted }}>{new Date(d).toLocaleDateString("fr-FR")}</span>
+          <div style={{ display: "flex", gap: 8 }}>
+            {l.daily && <span style={{ fontSize: 11, color: C.green, fontWeight: 700 }}>✓ Quotidien</span>}
+            {l.session && <span style={{ fontSize: 11, color: C.orange, fontWeight: 700 }}>✓ Séance</span>}
+          </div>
+        </div>
+      )))}
+    </div>
+  );
+}
+
+function Empty({ msg }) {
+  return <div style={{ textAlign: "center", padding: 30, color: C.muted, fontSize: 13 }}>{msg}</div>;
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
+</body>
+</html>
